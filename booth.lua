@@ -396,78 +396,28 @@ end)
 -- [END] BOX 4: SERVER HOP
 
 
--- [START] BOX 2 DISPLAY: BANG TRANG THAI DOC LAP
--- Chi hien thi 3 gia tri do Box 2 cap nhat: boothid, itemid, quantity.
+-- [START] BOX 2 DISPLAY: DYU HUB SECTION
+-- Tao cac phan tu ngay trong tab Booth, khong tao ScreenGui rieng.
+local Box2StatusSection = BoothTab:CreateSection("Box 2 - Scan Output")
+local Box2BoothLabel = Box2StatusSection:CreateLabel({ Text = "boothid: nil", Style = 1 })
+local Box2ItemLabel = Box2StatusSection:CreateLabel({ Text = "itemid: nil", Style = 1 })
+local Box2QuantityLabel = Box2StatusSection:CreateLabel({ Text = "quantity: nil", Style = 1 })
+
+local function Box2_DisplayValue(value)
+    if value == nil then
+        return "nil"
+    end
+    return tostring(value)
+end
+
+-- Cap nhat 3 label theo cac bien output cua Box 2.
 task.spawn(function()
-    local Players = game:GetService("Players")
-    local player = Players.LocalPlayer
-    local playerGui = player:WaitForChild("PlayerGui")
-
-    local oldGui = playerGui:FindFirstChild("Box2StatusDisplay")
-    if oldGui then oldGui:Destroy() end
-
-    local gui = Instance.new("ScreenGui")
-    gui.Name = "Box2StatusDisplay"
-    gui.ResetOnSpawn = false
-    gui.DisplayOrder = 20
-    gui.Parent = playerGui
-
-    local frame = Instance.new("Frame")
-    frame.Name = "Panel"
-    frame.Size = UDim2.fromOffset(300, 112)
-    frame.Position = UDim2.new(0, 12, 0.5, -56)
-    frame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
-    frame.BackgroundTransparency = 0.12
-    frame.BorderSizePixel = 0
-    frame.Parent = gui
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 8)
-    corner.Parent = frame
-
-    local title = Instance.new("TextLabel")
-    title.Name = "Title"
-    title.Size = UDim2.new(1, -16, 0, 24)
-    title.Position = UDim2.fromOffset(8, 4)
-    title.BackgroundTransparency = 1
-    title.Font = Enum.Font.GothamBold
-    title.TextSize = 14
-    title.TextXAlignment = Enum.TextXAlignment.Left
-    title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    title.Text = "BOX 2 - SCAN OUTPUT"
-    title.Parent = frame
-
-    local function makeValueLabel(name, y)
-        local label = Instance.new("TextLabel")
-        label.Name = name
-        label.Size = UDim2.new(1, -16, 0, 23)
-        label.Position = UDim2.fromOffset(8, y)
-        label.BackgroundTransparency = 1
-        label.Font = Enum.Font.Code
-        label.TextSize = 13
-        label.TextXAlignment = Enum.TextXAlignment.Left
-        label.TextColor3 = Color3.fromRGB(220, 220, 220)
-        label.TextTruncate = Enum.TextTruncate.AtEnd
-        label.Parent = frame
-        return label
-    end
-
-    local boothLabel = makeValueLabel("BoothId", 30)
-    local itemLabel = makeValueLabel("ItemId", 54)
-    local quantityLabel = makeValueLabel("Quantity", 78)
-
-    local function displayValue(value)
-        if value == nil then return "nil" end
-        return tostring(value)
-    end
-
-    -- Doc truc tiep 3 bien output cua Box 2; cap nhat lien tuc khi Box 2 thay doi.
-    while gui.Parent do
-        boothLabel.Text = "boothid: " .. displayValue(boothid)
-        itemLabel.Text = "itemid: " .. displayValue(itemid)
-        quantityLabel.Text = "quantity: " .. displayValue(quantity)
+    while true do
+        Box2BoothLabel:Set("boothid: " .. Box2_DisplayValue(boothid))
+        Box2ItemLabel:Set("itemid: " .. Box2_DisplayValue(itemid))
+        Box2QuantityLabel:Set("quantity: " .. Box2_DisplayValue(quantity))
         task.wait(0.1)
     end
 end)
--- [END] BOX 2 DISPLAY: BANG TRANG THAI DOC LAP
+-- [END] BOX 2 DISPLAY: DYU HUB SECTION
 
