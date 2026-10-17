@@ -346,12 +346,28 @@ Box2_FindEligibleItems = function()
 
         if not Box2_ExhaustedItems[key] and type(rule) == "table"
             and type(rule.item) == "string" and rule.item ~= "" then
+            local targetAssetId = GetPetAssetId(rule.item)
+            print(string.format(
+                "[Booth][Box 2] Dang quet %s | item=%s | assetId=%s | maxprice=%s",
+                key,
+                rule.item,
+                tostring(targetAssetId),
+                tostring(rule.maxprice)
+            ))
+
             local foundBoothId, foundItemId, foundQuantity = FindListingForRule(rule)
 
             if foundBoothId ~= nil then
                 boothid = foundBoothId
                 itemid = foundItemId
                 quantity = foundQuantity
+                print(string.format(
+                    "[Booth][Box 2] TIM THAY | item=%s | boothid=%s | itemid=%s | quantity=%s",
+                    rule.item,
+                    tostring(boothid),
+                    tostring(itemid),
+                    tostring(quantity)
+                ))
                 return {
                     boothid = boothid,
                     itemid = itemid,
@@ -359,6 +375,10 @@ Box2_FindEligibleItems = function()
                     item = rule.item,
                 }
             end
+            print(string.format(
+                "[Booth][Box 2] Chua tim thay listing dat dieu kien cho %s",
+                rule.item
+            ))
             Box2_ExhaustedItems[key] = true
             boothid, itemid, quantity = nil, nil, nil
         end
