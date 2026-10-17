@@ -136,7 +136,6 @@ local function Box0_AutoSniperBooth()
                 if type(Box2_FindEligibleItems) == "function" then
                     local ok, err = pcall(Box2_FindEligibleItems)
                     if not ok then
-                        warn("[Booth][Box 2] " .. tostring(err))
                     end
                 end
                 task.wait(0.5)
@@ -193,8 +192,6 @@ Box2_FindEligibleItems = function()
     local config = _G.DyuBoothSniper
     if type(config) ~= "table" then
         boothid, itemid, quantity = nil, nil, nil
-        warn("[Booth][Box 2] Config _G.DyuBoothSniper khong ton tai/khong phai table")
-        print("[Booth][Box 2][OUTPUT]", boothid, itemid, quantity)
         return nil
     end
 
@@ -205,16 +202,12 @@ Box2_FindEligibleItems = function()
         local petsModule = directory and directory:FindFirstChild("Pets")
         if not petsModule then
             boothid, itemid, quantity = nil, nil, nil
-            warn("[Booth][Box 2] Khong tim thay ReplicatedStorage.Library.Directory.Pets")
-            print("[Booth][Box 2][OUTPUT]", boothid, itemid, quantity)
             return nil
         end
 
         local ok, pets = pcall(require, petsModule)
         if not ok or type(pets) ~= "table" then
             boothid, itemid, quantity = nil, nil, nil
-            warn("[Booth][Box 2] require(Pets) that bai hoac khong tra ve table:", pets)
-            print("[Booth][Box 2][OUTPUT]", boothid, itemid, quantity)
             return nil
         end
         Box2_PetsDirectory = pets
@@ -224,8 +217,6 @@ Box2_FindEligibleItems = function()
     local booths = things and things:FindFirstChild("Booths")
     if not booths then
         boothid, itemid, quantity = nil, nil, nil
-        warn("[Booth][Box 2] Khong tim thay workspace.__THINGS.Booths")
-        print("[Booth][Box 2][OUTPUT]", boothid, itemid, quantity)
         return nil
     end
 
@@ -276,9 +267,7 @@ Box2_FindEligibleItems = function()
     local function FindListingForRule(rule)
         local targetAssetId = GetPetAssetId(rule.item)
         local maxPrice = tonumber(rule.maxprice)
-        print("[Booth][Box 2][RULE]", rule.item, "targetAssetId=", targetAssetId, "maxPrice=", maxPrice)
         if not targetAssetId or not maxPrice then
-            warn("[Booth][Box 2] Rule thieu item thumbnail ID hoac maxprice khong hop le:", rule.item, rule.maxprice)
             return nil
         end
 
@@ -297,19 +286,15 @@ Box2_FindEligibleItems = function()
                         local price = ReadCost(buy and buy:FindFirstChild("Cost", true))
 
                         if price ~= nil then
-                            print("[Booth][Box 2][PRICE CHECK]", "pet=", rule.item, "listing=", listing.Name, "price=", price, "maxPrice=", maxPrice)
                         else
-                            print("[Booth][Box 2][PRICE ERROR] Khong doc duoc Cost", "pet=", rule.item, "listing=", listing.Name)
                         end
 
                         if price ~= nil and price <= maxPrice then
                             local ownerId = booth:GetAttribute("Owner")
                             local listingQuantity = listing:GetAttribute("Quantity")
-                            print("[Booth][Box 2][CANDIDATE]", "ownerId=", ownerId, "listingId=", listing.Name, "quantity=", listingQuantity)
                             if ownerId ~= nil and listing.Name ~= "" and listingQuantity ~= nil then
                                 return ownerId, listing.Name, listingQuantity
                             else
-                                warn("[Booth][Box 2] Listing dung gia nhung thieu Owner/Name/Quantity")
                             end
                         end
                     end
@@ -342,8 +327,6 @@ Box2_FindEligibleItems = function()
                 boothid = foundBoothId
                 itemid = foundItemId
                 quantity = foundQuantity
-                print("[Booth][Box 2][FOUND]", "item=", rule.item, "boothid=", boothid, "itemid=", itemid, "quantity=", quantity)
-                print("[Booth][Box 2][OUTPUT]", boothid, itemid, quantity)
                 return {
                     boothid = boothid,
                     itemid = itemid,
@@ -351,15 +334,12 @@ Box2_FindEligibleItems = function()
                     item = rule.item,
                 }
             end
-
-            warn("[Booth][Box 2] Khong tim thay listing cho rule:", key, rule.item, "maxprice=", rule.maxprice, "- danh dau exhausted")
             Box2_ExhaustedItems[key] = true
             boothid, itemid, quantity = nil, nil, nil
         end
     end
 
     boothid, itemid, quantity = nil, nil, nil
-    print("[Booth][Box 2][OUTPUT] Khong tim thay listing:", boothid, itemid, quantity)
     if not Box2_ServerHopRequested then
         Box2_ServerHopRequested = true
         if type(Box4_ServerHop) == "function" then
@@ -369,6 +349,81 @@ Box2_FindEligibleItems = function()
     return nil
 end
 -- [END] BOX 2: TIM ITEM DU DIEU KIEN
+
+-- [START] BOX 2 DISPLAY: BANG TRANG THAI DOC LAP
+-- Chi hien thi 3 gia tri do Box 2 cap nhat: boothid, itemid, quantity.
+task.spawn(function()
+    local Players = game:GetService("Players")
+    local player = Players.LocalPlayer
+    local playerGui = player:WaitForChild("PlayerGui")
+
+    local oldGui = playerGui:FindFirstChild("Box2StatusDisplay")
+    if oldGui then oldGui:Destroy() end
+
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "Box2StatusDisplay"
+    gui.ResetOnSpawn = false
+    gui.DisplayOrder = 20
+    gui.Parent = playerGui
+
+    local frame = Instance.new("Frame")
+    frame.Name = "Panel"
+    frame.Size = UDim2.fromOffset(300, 112)
+    frame.Position = UDim2.new(0, 12, 0.5, -56)
+    frame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+    frame.BackgroundTransparency = 0.12
+    frame.BorderSizePixel = 0
+    frame.Parent = gui
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = frame
+
+    local title = Instance.new("TextLabel")
+    title.Name = "Title"
+    title.Size = UDim2.new(1, -16, 0, 24)
+    title.Position = UDim2.fromOffset(8, 4)
+    title.BackgroundTransparency = 1
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 14
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.Text = "BOX 2 - SCAN OUTPUT"
+    title.Parent = frame
+
+    local function makeValueLabel(name, y)
+        local label = Instance.new("TextLabel")
+        label.Name = name
+        label.Size = UDim2.new(1, -16, 0, 23)
+        label.Position = UDim2.fromOffset(8, y)
+        label.BackgroundTransparency = 1
+        label.Font = Enum.Font.Code
+        label.TextSize = 13
+        label.TextXAlignment = Enum.TextXAlignment.Left
+        label.TextColor3 = Color3.fromRGB(220, 220, 220)
+        label.TextTruncate = Enum.TextTruncate.AtEnd
+        label.Parent = frame
+        return label
+    end
+
+    local boothLabel = makeValueLabel("BoothId", 30)
+    local itemLabel = makeValueLabel("ItemId", 54)
+    local quantityLabel = makeValueLabel("Quantity", 78)
+
+    local function displayValue(value)
+        if value == nil then return "nil" end
+        return tostring(value)
+    end
+
+    -- Doc truc tiep 3 bien output cua Box 2; cap nhat lien tuc khi Box 2 thay doi.
+    while gui.Parent do
+        boothLabel.Text = "boothid: " .. displayValue(boothid)
+        itemLabel.Text = "itemid: " .. displayValue(itemid)
+        quantityLabel.Text = "quantity: " .. displayValue(quantity)
+        task.wait(0.1)
+    end
+end)
+-- [END] BOX 2 DISPLAY: BANG TRANG THAI DOC LAP
 
 Box0_AutoSniperBooth()
 
@@ -394,14 +449,10 @@ task.spawn(function()
                     }
                 }
 
-                print("[Booth][Box 3][ARGS READY]", "ownerId=", ownerId, "listingId=", listingId, "quantity=", listingQuantity)
-                print("[Booth][Box 3][ARGS]", args)
-
                 -- TODO: Dan lenh goi Remote mua listing cua ban vao day.
                 -- Vi du: <RemoteCuaBan>:FireServer(unpack(args))
                 -- Thay dong vi du bang lenh goi Remote chinh xac cua game.
             else
-                print("[Booth][Box 3][WAITING]", "ownerId=", ownerId, "listingId=", listingId, "quantity=", listingQuantity)
             end
         end
 
