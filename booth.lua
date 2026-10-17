@@ -216,24 +216,32 @@ Box2_FindEligibleItems = function()
                 local price = ReadCost(buy and buy:FindFirstChild("Cost"))
                 if price then
                     local itemName = listing:GetAttribute("ItemName")
-                    if type(itemName) ~= "string" then
-                        itemName = listing.Name
-                    end
-
                     for key, rule in pairs(config) do
                         if type(key) == "string" and key:match("^Items_%d+$")
                             and type(rule) == "table"
                             and type(rule.item) == "string"
-                            and itemName == rule.item
                             and price < (tonumber(rule.maxprice) or 0) then
-                            return {
-                                Item = listing,
-                                ItemName = itemName,
-                                Price = price,
-                                ListingID = listing.Name,
-                                Booth = booth,
-                                BoothID = booth.Name,
-                            }
+                            local matches = itemName == rule.item or listing.Name == rule.item
+                            if not matches then
+                                for _, child in ipairs(listing:GetDescendants()) do
+                                    if (child:IsA("TextLabel") or child:IsA("TextButton"))
+                                        and child.Text == rule.item then
+                                        matches = true
+                                        itemName = child.Text
+                                        break
+                                    end
+                                end
+                            end
+                            if matches then
+                                return {
+                                    Item = listing,
+                                    ItemName = rule.item,
+                                    Price = price,
+                                    ListingID = listing.Name,
+                                    Booth = booth,
+                                    BoothID = booth.Name,
+                                }
+                            end
                         end
                     end
                 end
