@@ -98,10 +98,98 @@ local BoothTab = Window:CreateTab({
 
 BoothTab:CreateSection("Tìm đồ trong Plaza")
 
--- [START] BOX 1: CHECK GEMS
-local function BoxCheckGem()
-    local CheckGemsToggle
+-- [START] BOX 0: AUTO SNIPER BOOTH
+local function Box0_AutoSniperBooth(Box1_CheckGem)
+    local AutoSearchToggle
+    local State = {
+        Running = false,
+        Generation = 0,
+    }
 
+    local function IsActive(generation)
+        return State.Running and State.Generation == generation
+    end
+
+    local function Stop(reason)
+        State.Running = false
+        State.Generation += 1
+        Settings.AutoSearch = false
+        SaveConfig()
+
+        if AutoSearchToggle then
+            AutoSearchToggle:UpdateState(false)
+        end
+
+        if reason then
+            warn("[DYU Booth] Auto Sniper Booth da dung: " .. reason)
+        end
+    end
+
+    local function Start()
+        local enough, diamonds = Box1_CheckGem.HasEnoughGems()
+        if not enough then
+            if diamonds == nil then
+                Stop("khong doc duoc Diamonds")
+            else
+                Stop(("Diamonds %d < MinimumGems %d")
+                    :format(diamonds, Box1_CheckGem.GetMinimumGems()))
+            end
+            return
+        end
+
+        State.Generation += 1
+        local generation = State.Generation
+        State.Running = true
+        Settings.AutoSearch = true
+        SaveConfig()
+
+        task.spawn(function()
+            while IsActive(generation) do
+                if Settings.CheckGems then
+                    local hasEnough, currentDiamonds = Box1_CheckGem.HasEnoughGems()
+                    if not hasEnough then
+                        if currentDiamonds == nil then
+                            Stop("khong doc duoc Diamonds")
+                        else
+                            Stop(("Diamonds %d < MinimumGems %d")
+                                :format(currentDiamonds, Box1_CheckGem.GetMinimumGems()))
+                        end
+                        break
+                    end
+                end
+
+                task.wait(0.5)
+            end
+        end)
+    end
+
+    AutoSearchToggle = BoothTab:CreateToggle({
+        Name = "Auto Sniper Booth",
+        CurrentValue = false,
+        Callback = function(value)
+            if value then
+                Start()
+            else
+                Stop()
+            end
+        end
+    })
+
+    return {
+        Stop = Stop,
+        IsActive = IsActive,
+        IsRunning = function()
+            return State.Running
+        end,
+        GetGeneration = function()
+            return State.Generation
+        end,
+    }
+end
+-- [END] BOX 0: AUTO SNIPER BOOTH
+
+-- [START] BOX 1: CHECK GEMS
+local function Box1_CheckGem()
     local function GetMyDiamonds()
         local leaderstats = Player:FindFirstChild("leaderstats")
         if not leaderstats then
@@ -136,114 +224,27 @@ local function BoxCheckGem()
         return diamonds >= GetMinimumGems(), diamonds
     end
 
-    CheckGemsToggle = BoothTab:CreateToggle({
+    BoothTab:CreateToggle({
         Name = "Check Gem",
         CurrentValue = Settings.CheckGems,
-        Callback = function(Value)
-            Settings.CheckGems = Value
+        Callback = function(value)
+            Settings.CheckGems = value
             SaveConfig()
         end
     })
 
     return {
-        HasEnoughGems = HasEnoughGems,
         GetMyDiamonds = GetMyDiamonds,
         GetMinimumGems = GetMinimumGems,
+        HasEnoughGems = HasEnoughGems,
     }
 end
 -- [END] BOX 1: CHECK GEMS
 
--- [START] BOX 0: AUTO SNIPER BOOTH
-local function BoxAutoSniper(CheckGem)
-    local AutoSearchToggle
-    local AutoSniper = {
-        Running = false,
-        Generation = 0,
-    }
 
-    local function IsActive(generation)
-        return AutoSniper.Running and AutoSniper.Generation == generation
-    end
-
-    local function Stop(reason)
-        AutoSniper.Running = false
-        AutoSniper.Generation += 1
-        Settings.AutoSearch = false
-        SaveConfig()
-
-        if AutoSearchToggle then
-            AutoSearchToggle:UpdateState(false)
-        end
-
-        if reason then
-            warn("[DYU Booth] Auto Sniper Booth da dung: " .. reason)
-        end
-    end
-
-    local function Start()
-        AutoSniper.Generation += 1
-        local generation = AutoSniper.Generation
-        AutoSniper.Running = true
-        Settings.AutoSearch = true
-        SaveConfig()
-
-        task.spawn(function()
-            while IsActive(generation) do
-                if Settings.CheckGems then
-                    local enough, diamonds = CheckGem.HasEnoughGems()
-                    if not enough then
-                        if diamonds == nil then
-                            Stop("khong doc duoc Diamonds")
-                        else
-                            Stop(("Diamonds %d < MinimumGems %d")
-                                :format(diamonds, CheckGem.GetMinimumGems()))
-                        end
-                        break
-                    end
-                end
-
-                task.wait(0.5)
-            end
-        end)
-    end
-
-    AutoSearchToggle = BoothTab:CreateToggle({
-        Name = "Auto Sniper Booth",
-        CurrentValue = false,
-        Callback = function(Value)
-            if Value then
-                local enough, diamonds = CheckGem.HasEnoughGems()
-                if not enough then
-                    if diamonds == nil then
-                        warn("[DYU Booth] Khong bat duoc: khong doc duoc Diamonds.")
-                    else
-                        warn(("[DYU Booth] Khong bat duoc: Diamonds %d < MinimumGems %d.")
-                            :format(diamonds, CheckGem.GetMinimumGems()))
-                    end
-                    Stop()
-                    return
-                end
-
-                Start()
-            else
-                Stop()
-            end
-        end
-    })
-
-    return {
-        Stop = Stop,
-        IsActive = IsActive,
-        GetGeneration = function()
-            return AutoSniper.Generation
-        end,
-    }
-end
--- [END] BOX 0: AUTO SNIPER BOOTH
-
-local CheckGem = BoxCheckGem()
-local AutoSniper = BoxAutoSniper(CheckGem)
-
+-- Khởi tạo các box theo thứ tự: box con trước, box điều phối sau.
+local CheckGem = Box1_CheckGem()
+local AutoSniper = Box0_AutoSniperBooth(CheckGem)
 
 -- [START] BOX 2: TIM ITEM DU DIEU KIEN
 -- TODO: Chua them chuc nang.
