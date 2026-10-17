@@ -99,7 +99,7 @@ local BoothTab = Window:CreateTab({
 BoothTab:CreateSection("Tìm đồ trong Plaza")
 
 -- [START] BOX 0: AUTO SNIPER BOOTH
-local RunBox1, StopBox0
+local RunBox1, StopBox0, Box2_FindEligibleItems
 local function Box0_AutoSniperBooth()
     local running = false
     local toggle
@@ -160,7 +160,7 @@ end
 -- [END] BOX 1: CHECK GEMS
 
 -- [START] BOX 2: TIM ITEM DU DIEU KIEN
-local function Box2_FindEligibleItems()
+Box2_FindEligibleItems = function()
     -- Chua them logic quet listing.
 end
 -- [END] BOX 2: TIM ITEM DU DIEU KIEN
