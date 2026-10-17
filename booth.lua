@@ -105,8 +105,10 @@ local function Box0_AutoSniperBooth()
     local toggle
 
     StopBox0 = function()
+        if not running and not Settings.AutoSearch then return end
         running = false
         Settings.AutoSearch = false
+        boothid, itemid, quantity = nil, nil, nil
         SaveConfig()
         if toggle then toggle:UpdateState(false) end
     end
@@ -116,9 +118,27 @@ local function Box0_AutoSniperBooth()
         running = true
         Settings.AutoSearch = true
         SaveConfig()
+
+        -- Box 1 doc lap: kiem tra Gems moi 2 giay.
         task.spawn(function()
             while running do
-                RunBox1()
+                local ok, err = pcall(RunBox1)
+                if not ok then
+                    warn("[Booth][Box 1] " .. tostring(err))
+                end
+                task.wait(2)
+            end
+        end)
+
+        -- Box 2 doc lap: cap nhat listing moi 0.5 giay.
+        task.spawn(function()
+            while running do
+                if type(Box2_FindEligibleItems) == "function" then
+                    local ok, err = pcall(Box2_FindEligibleItems)
+                    if not ok then
+                        warn("[Booth][Box 2] " .. tostring(err))
+                    end
+                end
                 task.wait(0.5)
             end
         end)
@@ -136,6 +156,8 @@ end
 
 -- [START] BOX 1: CHECK GEMS
 RunBox1 = function()
+    if not Settings.AutoSearch then return end
+
     local stats = Player:FindFirstChild("leaderstats")
     local gems
     if stats then
@@ -154,8 +176,6 @@ RunBox1 = function()
         StopBox0()
         return
     end
-
-    Box2_FindEligibleItems()
 end
 -- [END] BOX 1: CHECK GEMS
 
