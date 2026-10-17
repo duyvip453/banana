@@ -98,6 +98,18 @@ local BoothTab = Window:CreateTab({
 
 BoothTab:CreateSection("Tìm đồ trong Plaza")
 
+-- [START] BOX 2 DISPLAY: DYU HUB SECTION
+-- Tao cac phan tu trong tab Booth, khong tao ScreenGui rieng.
+local Box2StatusSection = BoothTab:CreateSection("Box 2 - Scan Output")
+local Box2BoothLabel = Box2StatusSection:CreateLabel({ Text = "boothid: nil", Style = 1 })
+local Box2ItemLabel = Box2StatusSection:CreateLabel({ Text = "itemid: nil", Style = 1 })
+local Box2QuantityLabel = Box2StatusSection:CreateLabel({ Text = "quantity: nil", Style = 1 })
+local function Box2_DisplayValue(value)
+    if value == nil then return "nil" end
+    return tostring(value)
+end
+-- [END] BOX 2 DISPLAY: DYU HUB SECTION
+
 -- [START] BOX 0: AUTO SNIPER BOOTH
 local RunBox1, StopBox0, Box2_FindEligibleItems, Box4_ServerHop
 local function Box0_AutoSniperBooth()
@@ -396,20 +408,7 @@ end)
 -- [END] BOX 4: SERVER HOP
 
 
--- [START] BOX 2 DISPLAY: DYU HUB SECTION
--- Tao cac phan tu ngay trong tab Booth, khong tao ScreenGui rieng.
-local Box2StatusSection = BoothTab:CreateSection("Box 2 - Scan Output")
-local Box2BoothLabel = Box2StatusSection:CreateLabel({ Text = "boothid: nil", Style = 1 })
-local Box2ItemLabel = Box2StatusSection:CreateLabel({ Text = "itemid: nil", Style = 1 })
-local Box2QuantityLabel = Box2StatusSection:CreateLabel({ Text = "quantity: nil", Style = 1 })
-
-local function Box2_DisplayValue(value)
-    if value == nil then
-        return "nil"
-    end
-    return tostring(value)
-end
-
+-- [START] BOX 2 DISPLAY UPDATE
 -- Cap nhat 3 label theo cac bien output cua Box 2.
 task.spawn(function()
     while true do
@@ -419,5 +418,6 @@ task.spawn(function()
         task.wait(0.1)
     end
 end)
--- [END] BOX 2 DISPLAY: DYU HUB SECTION
+
+-- [END] BOX 2 DISPLAY UPDATE
 
