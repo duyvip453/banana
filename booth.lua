@@ -101,7 +101,15 @@ BoothTab:CreateSection("Tìm đồ trong Plaza")
 -- [START] BOX 1: CHECK GEMS
 local CheckGemsToggle
 local AutoSearchToggle
-local CheckGemsLoopToken = 0
+local AutoSniperGeneration = 0
+local AutoSniper = {
+    Running = false,
+    Generation = 0,
+}
+
+local function IsAutoSniperActive(generation)
+    return AutoSniper.Running and AutoSniper.Generation == generation
+end
 
 local function GetMyDiamonds()
     local leaderstats = Player:FindFirstChild("leaderstats")
@@ -138,36 +146,47 @@ local function HasEnoughGems()
     return diamonds >= GetMinimumGems(), diamonds
 end
 
-local function StopAutoSearch(reason)
+local function StopAutoSniper(reason)
+    AutoSniper.Running = false
+    AutoSniper.Generation += 1
+    AutoSniperGeneration = AutoSniper.Generation
+
     Settings.AutoSearch = false
     SaveConfig()
 
-    if AutoSearchToggle then
+    if (AutoSearchToggle then
         AutoSearchToggle:UpdateState(false)
     end
 
     if reason then
-        warn("[DYU Booth] Auto Search da dung: " .. reason)
+        warn("[DYU Booth] Auto Sniper Booth da dung: " .. reason)
     end
 end
 
-local function StartCheckGemsLoop()
-    CheckGemsLoopToken += 1
-    local myToken = CheckGemsLoopToken
+local function StartAutoSniper()
+    AutoSniper.Generation += 1
+    AutoSniperGeneration = AutoSniper.Generation
+    local generation = AutoSniper.Generation
+    AutoSniper.Running = true
 
     task.spawn(function()
-        while Settings.CheckGems and myToken == CheckGemsLoopToken do
-            local enough, diamonds = HasEnoughGems()
-
-            if not enough then
-                local minimum = GetMinimumGems()
-                if diamonds == nil then
-                    StopAutoSearch("khong doc duoc Diamonds")
-                else
-                    StopAutoSearch(("Diamonds %d < MinimumGems %d"):format(diamonds, minimum))
+        while IsAutoSniperActive(generation) do
+            -- BOX 1: Check Gem la child task cua Auto Sniper Booth.
+            if Settings.CheckGems then
+                local enough, diamonds = HasEnoughGems()
+                if not enough then
+                    if diamonds == nil then
+                        StopAutoSniper("khong doc duoc Diamonds")
+                    else
+                        StopAutoSniper(("Diamonds %d < MinimumGems %d")
+                            :format(diamonds, GetMinimumGems()))
+                    end
+                    break
                 end
             end
 
+            -- Cac box con phai dung chung generation va kiem tra
+            -- IsAutoSniperActive(generation) sau moi yield.
             task.wait(0.5)
         end
     end)
@@ -179,46 +198,53 @@ CheckGemsToggle = BoothTab:CreateToggle({
     Callback = function(Value)
         Settings.CheckGems = Value
         SaveConfig()
-
-        CheckGemsLoopToken += 1
-        if Value then
-            StartCheckGemsLoop()
-        end
+        -- Khong tao loop rieng: Box 1 duoc dieu phoi boi Box 0.
     end
 })
 
 -- [END] BOX 1: CHECK GEMS
 
--- [START] Toggle Auto Search
+-- [START] Toggle AUTO SNIPER BOOTH
 AutoSearchToggle = BoothTab:CreateToggle({
-    Name = "Auto Search",
-    CurrentValue = Settings.AutoSearch,
+    Name = "Auto Sniper Booth",
+    CurrentValue = false,
     Callback = function(Value)
         if Value then
             local enough, diamonds = HasEnoughGems()
             if not enough then
                 Settings.AutoSearch = false
+                AutoSniper.Running = false
                 SaveConfig()
                 if AutoSearchToggle then
                     AutoSearchToggle:UpdateState(false)
                 end
 
                 if diamonds == nil then
-                    warn("[DYU Booth] Khong bat Auto Search: khong doc duoc Diamonds.")
+                    warn("[DYU Booth] Khong bat Auto Sniper Booth: khong doc duoc Diamonds.")
                 else
-                    warn(("[DYU Booth] Khong bat Auto Search: Diamonds %d < MinimumGems %d.")
+                    warn(("[DYU Booth] Khong bat Auto Sniper Booth: Diamonds %d < MinimumGems %d.")
                         :format(diamonds, GetMinimumGems()))
                 end
                 return
             end
-        end
 
-        Settings.AutoSearch = Value
-        SaveConfig()
+            Settings.AutoSearch = true
+            SaveConfig()
+            StartAutoSniper()
+        else
+            StopAutoSniper()
+        end
     end
 })
 
--- [END] Toggle Auto Search
+-- [END] Toggle AUTO SNIPER BOOTH
+
+-- [START] BOX 0: AUTO SNIPER BOOTH LIFECYCLE
+-- Box 0 la bo dieu phoi trung tam cho Box 1-4.
+-- Tat toggle cha se tang Generation, huy hieu luc moi loop con.
+-- Moi child task can kiem tra IsAutoSniperActive(generation)
+-- truoc va sau moi task.wait() va truoc hanh dong quan trong.
+-- [END] BOX 0: AUTO SNIPER BOOTH LIFECYCLE
 
 
 -- [START] BOX 2: TIM ITEM DU DIEU KIEN
