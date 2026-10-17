@@ -193,6 +193,8 @@ Box2_FindEligibleItems = function()
     local config = _G.DyuBoothSniper
     if type(config) ~= "table" then
         boothid, itemid, quantity = nil, nil, nil
+        warn("[Booth][Box 2] Config _G.DyuBoothSniper khong ton tai/khong phai table")
+        print("[Booth][Box 2][OUTPUT]", boothid, itemid, quantity)
         return nil
     end
 
@@ -203,12 +205,16 @@ Box2_FindEligibleItems = function()
         local petsModule = directory and directory:FindFirstChild("Pets")
         if not petsModule then
             boothid, itemid, quantity = nil, nil, nil
+            warn("[Booth][Box 2] Khong tim thay ReplicatedStorage.Library.Directory.Pets")
+            print("[Booth][Box 2][OUTPUT]", boothid, itemid, quantity)
             return nil
         end
 
         local ok, pets = pcall(require, petsModule)
         if not ok or type(pets) ~= "table" then
             boothid, itemid, quantity = nil, nil, nil
+            warn("[Booth][Box 2] require(Pets) that bai hoac khong tra ve table:", pets)
+            print("[Booth][Box 2][OUTPUT]", boothid, itemid, quantity)
             return nil
         end
         Box2_PetsDirectory = pets
@@ -218,6 +224,8 @@ Box2_FindEligibleItems = function()
     local booths = things and things:FindFirstChild("Booths")
     if not booths then
         boothid, itemid, quantity = nil, nil, nil
+        warn("[Booth][Box 2] Khong tim thay workspace.__THINGS.Booths")
+        print("[Booth][Box 2][OUTPUT]", boothid, itemid, quantity)
         return nil
     end
 
@@ -268,7 +276,11 @@ Box2_FindEligibleItems = function()
     local function FindListingForRule(rule)
         local targetAssetId = GetPetAssetId(rule.item)
         local maxPrice = tonumber(rule.maxprice)
-        if not targetAssetId or not maxPrice then return nil end
+        print("[Booth][Box 2][RULE]", rule.item, "targetAssetId=", targetAssetId, "maxPrice=", maxPrice)
+        if not targetAssetId or not maxPrice then
+            warn("[Booth][Box 2] Rule thieu item thumbnail ID hoac maxprice khong hop le:", rule.item, rule.maxprice)
+            return nil
+        end
 
         for _, booth in ipairs(booths:GetChildren()) do
             local pets = booth:FindFirstChild("Pets")
@@ -284,11 +296,20 @@ Box2_FindEligibleItems = function()
                         local buy = listing:FindFirstChild("Buy", true)
                         local price = ReadCost(buy and buy:FindFirstChild("Cost", true))
 
+                        if price ~= nil then
+                            print("[Booth][Box 2][PRICE CHECK]", "pet=", rule.item, "listing=", listing.Name, "price=", price, "maxPrice=", maxPrice)
+                        else
+                            print("[Booth][Box 2][PRICE ERROR] Khong doc duoc Cost", "pet=", rule.item, "listing=", listing.Name)
+                        end
+
                         if price ~= nil and price <= maxPrice then
                             local ownerId = booth:GetAttribute("Owner")
                             local listingQuantity = listing:GetAttribute("Quantity")
+                            print("[Booth][Box 2][CANDIDATE]", "ownerId=", ownerId, "listingId=", listing.Name, "quantity=", listingQuantity)
                             if ownerId ~= nil and listing.Name ~= "" and listingQuantity ~= nil then
                                 return ownerId, listing.Name, listingQuantity
+                            else
+                                warn("[Booth][Box 2] Listing dung gia nhung thieu Owner/Name/Quantity")
                             end
                         end
                     end
@@ -321,6 +342,8 @@ Box2_FindEligibleItems = function()
                 boothid = foundBoothId
                 itemid = foundItemId
                 quantity = foundQuantity
+                print("[Booth][Box 2][FOUND]", "item=", rule.item, "boothid=", boothid, "itemid=", itemid, "quantity=", quantity)
+                print("[Booth][Box 2][OUTPUT]", boothid, itemid, quantity)
                 return {
                     boothid = boothid,
                     itemid = itemid,
@@ -329,12 +352,14 @@ Box2_FindEligibleItems = function()
                 }
             end
 
+            warn("[Booth][Box 2] Khong tim thay listing cho rule:", key, rule.item, "maxprice=", rule.maxprice, "- danh dau exhausted")
             Box2_ExhaustedItems[key] = true
             boothid, itemid, quantity = nil, nil, nil
         end
     end
 
     boothid, itemid, quantity = nil, nil, nil
+    print("[Booth][Box 2][OUTPUT] Khong tim thay listing:", boothid, itemid, quantity)
     if not Box2_ServerHopRequested then
         Box2_ServerHopRequested = true
         if type(Box4_ServerHop) == "function" then
@@ -369,9 +394,15 @@ task.spawn(function()
                     }
                 }
 
+                print("[Booth][Box 3][ARGS READY]", "ownerId=", ownerId, "listingId=", listingId, "quantity=", listingQuantity)
+                print("[Booth][Box 3][ARGS]", args)
+
                 -- TODO: Dan lenh goi Remote mua listing cua ban vao day.
                 -- Vi du: <RemoteCuaBan>:FireServer(unpack(args))
                 -- Thay dong vi du bang lenh goi Remote chinh xac cua game.
+            else
+                print("[Booth][Box 3][WAITING]", "ownerId=", ownerId, "listingId=", listingId, "quantity=", listingQuantity)
+            end
             end
         end
 
