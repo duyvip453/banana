@@ -7,6 +7,7 @@ local ConfigFileName = "DYUHUB_Booth_" .. game.PlaceId .. "_" .. Player.UserId .
 
 local Settings = {
     AutoSearch = false,
+    CheckGems = false,
 }
 
 local function SaveConfig()
@@ -97,22 +98,127 @@ local BoothTab = Window:CreateTab({
 
 BoothTab:CreateSection("Tìm đồ trong Plaza")
 
-BoothTab:CreateToggle({
+-- [START] BOX 1: CHECK GEMS
+local CheckGemsToggle
+local AutoSearchToggle
+local CheckGemsLoopToken = 0
+
+local function GetMyDiamonds()
+    local leaderstats = Player:FindFirstChild("leaderstats")
+    if not leaderstats then
+        return nil
+    end
+
+    for _, stat in ipairs(leaderstats:GetChildren()) do
+        if stat.Name:find("Diamonds", 1, true)
+            and (stat:IsA("IntValue") or stat:IsA("NumberValue")) then
+            return stat.Value
+        end
+    end
+
+    return nil
+end
+
+local function GetMinimumGems()
+    local config = _G.DyuBoothSniper
+    if type(config) ~= "table" then
+        return 0
+    end
+
+    local minimum = tonumber(config.MinimumGems)
+    return minimum or 0
+end
+
+local function HasEnoughGems()
+    local diamonds = GetMyDiamonds()
+    if diamonds == nil then
+        return false, nil
+    end
+
+    return diamonds >= GetMinimumGems(), diamonds
+end
+
+local function StopAutoSearch(reason)
+    Settings.AutoSearch = false
+    SaveConfig()
+
+    if AutoSearchToggle then
+        AutoSearchToggle:UpdateState(false)
+    end
+
+    if reason then
+        warn("[DYU Booth] Auto Search da dung: " .. reason)
+    end
+end
+
+local function StartCheckGemsLoop()
+    CheckGemsLoopToken += 1
+    local myToken = CheckGemsLoopToken
+
+    task.spawn(function()
+        while Settings.CheckGems and myToken == CheckGemsLoopToken do
+            local enough, diamonds = HasEnoughGems()
+
+            if not enough then
+                local minimum = GetMinimumGems()
+                if diamonds == nil then
+                    StopAutoSearch("khong doc duoc Diamonds")
+                else
+                    StopAutoSearch(("Diamonds %d < MinimumGems %d"):format(diamonds, minimum))
+                end
+            end
+
+            task.wait(0.5)
+        end
+    end)
+end
+
+CheckGemsToggle = BoothTab:CreateToggle({
+    Name = "Check Gem",
+    CurrentValue = Settings.CheckGems,
+    Callback = function(Value)
+        Settings.CheckGems = Value
+        SaveConfig()
+
+        CheckGemsLoopToken += 1
+        if Value then
+            StartCheckGemsLoop()
+        end
+    end
+})
+
+-- [END] BOX 1: CHECK GEMS
+
+-- [START] Toggle Auto Search
+AutoSearchToggle = BoothTab:CreateToggle({
     Name = "Auto Search",
     CurrentValue = Settings.AutoSearch,
     Callback = function(Value)
+        if Value then
+            local enough, diamonds = HasEnoughGems()
+            if not enough then
+                Settings.AutoSearch = false
+                SaveConfig()
+                if AutoSearchToggle then
+                    AutoSearchToggle:UpdateState(false)
+                end
+
+                if diamonds == nil then
+                    warn("[DYU Booth] Khong bat Auto Search: khong doc duoc Diamonds.")
+                else
+                    warn(("[DYU Booth] Khong bat Auto Search: Diamonds %d < MinimumGems %d.")
+                        :format(diamonds, GetMinimumGems()))
+                end
+                return
+            end
+        end
+
         Settings.AutoSearch = Value
         SaveConfig()
     end
 })
 
--- [END] Tab Booth / Plaza
-
-
--- [START] BOX 1: CHECK GEMS
--- TODO: Chua them chuc nang.
--- Muc dich: Doc Gems hien tai va doi chieu voi MinimumGems.
--- [END] BOX 1: CHECK GEMS
+-- [END] Toggle Auto Search
 
 
 -- [START] BOX 2: TIM ITEM DU DIEU KIEN
