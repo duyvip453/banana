@@ -99,7 +99,7 @@ local BoothTab = Window:CreateTab({
 BoothTab:CreateSection("Tìm đồ trong Plaza")
 
 -- [START] BOX 0: AUTO SNIPER BOOTH
-local RunBox1, StopBox0, Box2_FindEligibleItems
+local RunBox1, StopBox0, Box2_FindEligibleItems, Box4_ServerHop
 local function Box0_AutoSniperBooth()
     local running = false
     local toggle
@@ -160,10 +160,46 @@ end
 -- [END] BOX 1: CHECK GEMS
 
 -- [START] BOX 2: TIM ITEM DU DIEU KIEN
+-- Du lieu dung chung cho Box 3; Box 2 cap nhat lai sau moi lan quet.
+boothid = nil
+itemid = nil
+quantity = nil
+
+local Box2_ExhaustedItems = {}
+local Box2_PetsDirectory
+local Box2_ServerHopRequested = false
+
 Box2_FindEligibleItems = function()
-    local booths = workspace:FindFirstChild("__THINGS")
-    booths = booths and booths:FindFirstChild("Booths")
-    if not booths then return nil end
+    local config = _G.DyuBoothSniper
+    if type(config) ~= "table" then
+        boothid, itemid, quantity = nil, nil, nil
+        return nil
+    end
+
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    if not Box2_PetsDirectory then
+        local library = ReplicatedStorage:FindFirstChild("Library")
+        local directory = library and library:FindFirstChild("Directory")
+        local petsModule = directory and directory:FindFirstChild("Pets")
+        if not petsModule then
+            boothid, itemid, quantity = nil, nil, nil
+            return nil
+        end
+
+        local ok, pets = pcall(require, petsModule)
+        if not ok or type(pets) ~= "table" then
+            boothid, itemid, quantity = nil, nil, nil
+            return nil
+        end
+        Box2_PetsDirectory = pets
+    end
+
+    local things = workspace:FindFirstChild("__THINGS")
+    local booths = things and things:FindFirstChild("Booths")
+    if not booths then
+        boothid, itemid, quantity = nil, nil, nil
+        return nil
+    end
 
     local function ParsePrice(value)
         if type(value) == "number" then return value end
@@ -173,7 +209,6 @@ Box2_FindEligibleItems = function()
         local number, suffix = text:match("^(%d+%.?%d*)([kmb]?)$")
         number = tonumber(number)
         if not number then return nil end
-
         local multiplier = ({ k = 1e3, m = 1e6, b = 1e9 })[suffix] or 1
         return number * multiplier
     end
@@ -182,73 +217,110 @@ Box2_FindEligibleItems = function()
         if not cost then return nil end
         if cost:IsA("IntValue") or cost:IsA("NumberValue") then
             return cost.Value
-        end
-        if cost:IsA("StringValue") then
+        elseif cost:IsA("StringValue") then
             return ParsePrice(cost.Value)
-        end
-        if cost:IsA("TextLabel") or cost:IsA("TextButton") then
+        elseif cost:IsA("TextLabel") or cost:IsA("TextButton") then
             return ParsePrice(cost.Text)
         end
+
         for _, child in ipairs(cost:GetDescendants()) do
             if child:IsA("TextLabel") or child:IsA("TextButton") then
-                local price = ParsePrice(child.Text)
-                if price then return price end
+                local parsed = ParsePrice(child.Text)
+                if parsed ~= nil then return parsed end
             elseif child:IsA("IntValue") or child:IsA("NumberValue") then
                 return child.Value
             elseif child:IsA("StringValue") then
-                local price = ParsePrice(child.Value)
-                if price then return price end
+                local parsed = ParsePrice(child.Value)
+                if parsed ~= nil then return parsed end
             end
         end
         return nil
     end
 
-    local config = _G.DyuBoothSniper
-    if type(config) ~= "table" then return nil end
+    local function GetPetAssetId(petName)
+        local pet = Box2_PetsDirectory[petName]
+        if type(pet) ~= "table" or type(pet.thumbnail) ~= "string" then
+            return nil
+        end
+        return pet.thumbnail:match("%d+")
+    end
 
-    for _, booth in ipairs(booths:GetChildren()) do
-        local pets = booth:FindFirstChild("Pets")
-        local top = pets and pets:FindFirstChild("BoothTop")
-        local scroll = top and top:FindFirstChild("PetScroll")
-        if scroll then
-            for _, listing in ipairs(scroll:GetChildren()) do
-                local buy = listing:FindFirstChild("Buy")
-                local price = ReadCost(buy and buy:FindFirstChild("Cost"))
-                if price then
-                    local itemName = listing:GetAttribute("ItemName")
-                    for key, rule in pairs(config) do
-                        if type(key) == "string" and key:match("^Items_%d+$")
-                            and type(rule) == "table"
-                            and type(rule.item) == "string"
-                            and price < (tonumber(rule.maxprice) or 0) then
-                            local matches = itemName == rule.item or listing.Name == rule.item
-                            if not matches then
-                                for _, child in ipairs(listing:GetDescendants()) do
-                                    if (child:IsA("TextLabel") or child:IsA("TextButton"))
-                                        and child.Text == rule.item then
-                                        matches = true
-                                        itemName = child.Text
-                                        break
-                                    end
-                                end
-                            end
-                            if matches then
-                                return {
-                                    Item = listing,
-                                    ItemName = rule.item,
-                                    Price = price,
-                                    ListingID = listing.Name,
-                                    Booth = booth,
-                                    BoothID = booth.Name,
-                                }
+    local function FindListingForRule(rule)
+        local targetAssetId = GetPetAssetId(rule.item)
+        local maxPrice = tonumber(rule.maxprice)
+        if not targetAssetId or not maxPrice then return nil end
+
+        for _, booth in ipairs(booths:GetChildren()) do
+            local pets = booth:FindFirstChild("Pets")
+            local top = pets and pets:FindFirstChild("BoothTop")
+            local scroll = top and (top:FindFirstChild("PetScroll") or top:FindFirstChild("PetScroll", true))
+
+            if scroll then
+                for _, listing in ipairs(scroll:GetChildren()) do
+                    local icon = listing:FindFirstChild("Icon", true)
+                    local image = icon and icon:IsA("ImageLabel") and icon.Image
+
+                    if type(image) == "string" and image:match("%d+") == targetAssetId then
+                        local buy = listing:FindFirstChild("Buy", true)
+                        local price = ReadCost(buy and buy:FindFirstChild("Cost", true))
+
+                        if price ~= nil and price <= maxPrice then
+                            local ownerId = booth:GetAttribute("Owner")
+                            local listingQuantity = listing:GetAttribute("Quantity")
+                            if ownerId ~= nil and listing.Name ~= "" and listingQuantity ~= nil then
+                                return ownerId, listing.Name, listingQuantity
                             end
                         end
                     end
                 end
             end
         end
+        return nil
     end
 
+    -- Duyet Items_1, Items_2... theo thu tu so, khong gioi han so luong item.
+    local maxIndex = 0
+    for key in pairs(config) do
+        if type(key) == "string" then
+            local index = tonumber(key:match("^Items_(%d+)$"))
+            if index and index > maxIndex then maxIndex = index end
+        end
+    end
+
+    -- Chi tra ve mot listing. Neu khong tim thay, danh dau item het hang
+    -- va chuyen ngay sang item tiep theo trong cung lan quet.
+    for index = 1, maxIndex do
+        local key = "Items_" .. index
+        local rule = config[key]
+
+        if not Box2_ExhaustedItems[key] and type(rule) == "table"
+            and type(rule.item) == "string" and rule.item ~= "" then
+            local foundBoothId, foundItemId, foundQuantity = FindListingForRule(rule)
+
+            if foundBoothId ~= nil then
+                boothid = foundBoothId
+                itemid = foundItemId
+                quantity = foundQuantity
+                return {
+                    boothid = boothid,
+                    itemid = itemid,
+                    quantity = quantity,
+                    item = rule.item,
+                }
+            end
+
+            Box2_ExhaustedItems[key] = true
+            boothid, itemid, quantity = nil, nil, nil
+        end
+    end
+
+    boothid, itemid, quantity = nil, nil, nil
+    if not Box2_ServerHopRequested then
+        Box2_ServerHopRequested = true
+        if type(Box4_ServerHop) == "function" then
+            Box4_ServerHop()
+        end
+    end
     return nil
 end
 -- [END] BOX 2: TIM ITEM DU DIEU KIEN
