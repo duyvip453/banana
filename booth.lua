@@ -413,24 +413,28 @@ end)
 
 
 -- [START] BOX 2 TEXT DISPLAY
--- Mot label duy nhat hien thi ca 3 gia tri cua Box 2.
+-- Dung Tab1 de tao mot label duy nhat hien thi ca 3 gia tri Box 2.
+-- Tab1 tro den tab Booth da duoc tao o phia tren.
+local Tab1 = BoothTab
+
 local function Box2_DisplayValue(value)
     if value == nil then return "nil" end
     return tostring(value)
 end
 
-local Box2StatusLabel = BoothTab:CreateLabel({
+local Box2StatusLabel = Tab1:CreateLabel({
     Text = "boothid: nil | itemid: nil | quantity: nil",
     Style = 2
 })
 
 task.spawn(function()
     while true do
-        Box2StatusLabel:Set(
-            "boothid: " .. Box2_DisplayValue(boothid)
-            .. " | itemid: " .. Box2_DisplayValue(itemid)
-            .. " | quantity: " .. Box2_DisplayValue(quantity)
-        )
+        Box2StatusLabel:Set({
+            Text = "boothid: " .. Box2_DisplayValue(boothid)
+                .. " | itemid: " .. Box2_DisplayValue(itemid)
+                .. " | quantity: " .. Box2_DisplayValue(quantity),
+            Style = 2
+        })
         task.wait(0.1)
     end
 end)
