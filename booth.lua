@@ -107,3 +107,29 @@ BoothTab:CreateToggle({
 })
 
 -- [END] Tab Booth / Plaza
+
+
+-- [START] BOX 1: CHECK GEMS
+-- TODO: Chua them chuc nang.
+-- Muc dich: Doc Gems hien tai va doi chieu voi MinimumGems.
+-- [END] BOX 1: CHECK GEMS
+
+
+-- [START] BOX 2: TIM ITEM DU DIEU KIEN
+-- TODO: Chua them chuc nang.
+-- Muc dich: Quet listing, nhan dien ten item, gia, ListingID,
+-- BoothID va Quantity; doi chieu voi cau hinh nguoi dung.
+-- [END] BOX 2: TIM ITEM DU DIEU KIEN
+
+
+-- [START] BOX 3: PURCHASE
+-- TODO: Chua them chuc nang.
+-- Muc dich: Khu vuc xu ly mua listing da duoc xac minh.
+-- [END] BOX 3: PURCHASE
+
+
+-- [START] BOX 4: SERVER HOP
+-- TODO: Chua them chuc nang.
+-- Muc dich: Khu vuc xu ly doi server khi khong con listing
+-- nao dat dieu kien sau mot luot quet thanh cong.
+-- [END] BOX 4: SERVER HOP
