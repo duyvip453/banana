@@ -413,28 +413,22 @@ end)
 
 
 -- [START] BOX 2 TEXT DISPLAY
--- Tao mot bang/khung van ban chi de hien thi trang thai Box 2, khong tao Section rieng.
+-- Tao cac dong van ban truc tiep trong tab Booth, khong tao Section hay ScreenGui.
 local function Box2_DisplayValue(value)
     if value == nil then return "nil" end
     return tostring(value)
 end
 
-local Box2StatusDisplay = BoothTab:CreateParagraph({
-    Title = "Box 2 - Thong tin hien tai",
-    Text = "boothid: nil\nitemid: nil\nquantity: nil"
-})
+local Box2BoothLabel = BoothTab:CreateLabel({ Text = "boothid: nil", Style = 2 })
+local Box2ItemLabel = BoothTab:CreateLabel({ Text = "itemid: nil", Style = 2 })
+local Box2QuantityLabel = BoothTab:CreateLabel({ Text = "quantity: nil", Style = 2 })
 
--- Cap nhat noi dung khung van ban theo output hien tai cua Box 2.
 task.spawn(function()
     while true do
-        Box2StatusDisplay:Set({
-            Title = "Box 2 - Thong tin hien tai",
-            Text = "boothid: " .. Box2_DisplayValue(boothid)
-                .. "\nitemid: " .. Box2_DisplayValue(itemid)
-                .. "\nquantity: " .. Box2_DisplayValue(quantity)
-        })
+        Box2BoothLabel:Set("boothid: " .. Box2_DisplayValue(boothid))
+        Box2ItemLabel:Set("itemid: " .. Box2_DisplayValue(itemid))
+        Box2QuantityLabel:Set("quantity: " .. Box2_DisplayValue(quantity))
         task.wait(0.1)
     end
 end)
 -- [END] BOX 2 TEXT DISPLAY
-
