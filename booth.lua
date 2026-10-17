@@ -153,6 +153,47 @@ local function Box0_AutoSniperBooth()
                 task.wait(0.5)
             end
         end)
+
+
+        -- Box 3 chi chay khi toggle Box 0 bat; tat toggle thi vong lap ket thuc.
+        task.spawn(function()
+            while running and Settings.AutoSearch do
+                local ownerId = boothid
+                local listingId = itemid
+                local listingQuantity = quantity
+
+                if ownerId ~= nil
+                    and listingId ~= nil
+                    and tonumber(listingQuantity) ~= nil then
+                    local args = {
+                        ownerId,
+                        {
+                            [listingId] = listingQuantity
+                        },
+                        {
+                            Caller = {
+                                LineNumber = 527,
+                                ScriptClass = "ModuleScript",
+                                Variadic = false,
+                                Traceback = "ReplicatedStorage.Library.Client.BoothCmds:527 function PromptPurchase2\\nReplicatedStorage.Library.Client.BoothCmds:654 function promptOtherPlayerBooth2\\nReplicatedStorage.Library.Client.BoothCmds:157",
+                                ScriptPath = "ReplicatedStorage.Library.Client.BoothCmds",
+                                FunctionName = "PromptPurchase2",
+                                Handle = "function: 0x4afa980d0c15edc1",
+                                ScriptType = "Instance",
+                                ParameterCount = 2,
+                                SourceIdentifier = "ReplicatedStorage.Library.Client.BoothCmds"
+                            }
+                        }
+                    }
+
+                    game:GetService("ReplicatedStorage")
+                        :WaitForChild("Network")
+                        :WaitForChild("Booths_RequestPurchase")
+                        :InvokeServer(unpack(args))
+                end
+                task.wait(0.5)
+            end
+        end)
     end
 
     toggle = BoothTab:CreateToggle({
@@ -367,53 +408,11 @@ end
 Box0_AutoSniperBooth()
 
 
--- [START] BOX 3: PURCHASE
--- Box 3 doc lap: chuan bi args mua moi 0.5 giay khi AutoSearch dang bat.
-task.spawn(function()
-    while true do
-        if Settings.AutoSearch then
-            local ownerId = boothid
-            local listingId = itemid
-            local listingQuantity = quantity
-
-            -- Chi tao args khi Box 2 da tim duoc listing hop le.
-            if ownerId ~= nil
-                and listingId ~= nil
-                and tonumber(listingQuantity) ~= nil then
-
-                local args = {
-                    ownerId,
-                    {
-                        [listingId] = listingQuantity
-                    },
-    {
-        Caller = {
-            LineNumber = 527,
-            ScriptClass = "ModuleScript",
-            Variadic = false,
-            Traceback = "ReplicatedStorage.Library.Client.BoothCmds:527 function PromptPurchase2\nReplicatedStorage.Library.Client.BoothCmds:654 function promptOtherPlayerBooth2\nReplicatedStorage.Library.Client.BoothCmds:157",
-            ScriptPath = "ReplicatedStorage.Library.Client.BoothCmds",
-            FunctionName = "PromptPurchase2",
-            Handle = "function: 0x4afa980d0c15edc1",
-            ScriptType = "Instance",
-            ParameterCount = 2,
-            SourceIdentifier = "ReplicatedStorage.Library.Client.BoothCmds"
-        }
-    }
-}
-
-game:GetService("ReplicatedStorage")
-    :WaitForChild("Network")
-    :WaitForChild("Booths_RequestPurchase")
-    :InvokeServer(unpack(args))
-            else
-            end
-        end
-
-        task.wait(0.5)
-    end
-end)
+-- [START] BOX 3: PURCHASE (runs only while Box 0 toggle is ON)
+-- Logic moved into Box0 Start loop.
 -- [END] BOX 3: PURCHASE
+
+
 
 
 -- [START] BOX 4: SERVER HOP
