@@ -154,7 +154,7 @@ local function StopAutoSniper(reason)
     Settings.AutoSearch = false
     SaveConfig()
 
-    if (AutoSearchToggle then
+    if AutoSearchToggle then
         AutoSearchToggle:UpdateState(false)
     end
 
