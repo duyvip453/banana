@@ -97,6 +97,17 @@ local BoothTab = Window:CreateTab({
 })
 
 BoothTab:CreateSection("Tìm đồ trong Plaza")
+-- [START] BOX 2 STATUS LABEL
+local Tab1 = BoothTab
+local function Box2_DisplayValue(value)
+    if value == nil then return "nil" end
+    return tostring(value)
+end
+local Box2StatusLabel = Tab1:CreateLabel({
+    Text = "boothid: nil | itemid: nil | quantity: nil",
+    Style = 2
+})
+-- [END] BOX 2 STATUS LABEL
 
 
 -- [START] BOX 0: AUTO SNIPER BOOTH
@@ -412,30 +423,15 @@ end)
 -- [END] BOX 4: SERVER HOP
 
 
--- [START] BOX 2 TEXT DISPLAY
--- Dung Tab1 de tao mot label duy nhat hien thi ca 3 gia tri Box 2.
--- Tab1 tro den tab Booth da duoc tao o phia tren.
-local Tab1 = BoothTab
-
-local function Box2_DisplayValue(value)
-    if value == nil then return "nil" end
-    return tostring(value)
-end
-
-local Box2StatusLabel = Tab1:CreateLabel({
-    Text = "boothid: nil | itemid: nil | quantity: nil",
-    Style = 2
-})
-
+-- [START] BOX 2 DISPLAY UPDATE
 task.spawn(function()
     while true do
-        Box2StatusLabel:Set({
-            Text = "boothid: " .. Box2_DisplayValue(boothid)
-                .. " | itemid: " .. Box2_DisplayValue(itemid)
-                .. " | quantity: " .. Box2_DisplayValue(quantity),
-            Style = 2
-        })
+        Box2StatusLabel:Set(
+            "boothid: " .. Box2_DisplayValue(boothid)
+            .. " | itemid: " .. Box2_DisplayValue(itemid)
+            .. " | quantity: " .. Box2_DisplayValue(quantity)
+        )
         task.wait(0.1)
     end
 end)
--- [END] BOX 2 TEXT DISPLAY
+-- [END] BOX 2 DISPLAY UPDATE
