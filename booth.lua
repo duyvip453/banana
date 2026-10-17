@@ -161,7 +161,87 @@ end
 
 -- [START] BOX 2: TIM ITEM DU DIEU KIEN
 Box2_FindEligibleItems = function()
-    -- Chua them logic quet listing.
+    local booths = workspace:FindFirstChild("__THINGS")
+    booths = booths and booths:FindFirstChild("Booths")
+    if not booths then return nil end
+
+    local function ParsePrice(value)
+        if type(value) == "number" then return value end
+        if type(value) ~= "string" then return nil end
+
+        local text = value:lower():gsub(",", ""):gsub("%s+", "")
+        local number, suffix = text:match("^(%d+%.?%d*)([kmb]?)$")
+        number = tonumber(number)
+        if not number then return nil end
+
+        local multiplier = ({ k = 1e3, m = 1e6, b = 1e9 })[suffix] or 1
+        return number * multiplier
+    end
+
+    local function ReadCost(cost)
+        if not cost then return nil end
+        if cost:IsA("IntValue") or cost:IsA("NumberValue") then
+            return cost.Value
+        end
+        if cost:IsA("StringValue") then
+            return ParsePrice(cost.Value)
+        end
+        if cost:IsA("TextLabel") or cost:IsA("TextButton") then
+            return ParsePrice(cost.Text)
+        end
+        for _, child in ipairs(cost:GetDescendants()) do
+            if child:IsA("TextLabel") or child:IsA("TextButton") then
+                local price = ParsePrice(child.Text)
+                if price then return price end
+            elseif child:IsA("IntValue") or child:IsA("NumberValue") then
+                return child.Value
+            elseif child:IsA("StringValue") then
+                local price = ParsePrice(child.Value)
+                if price then return price end
+            end
+        end
+        return nil
+    end
+
+    local config = _G.DyuBoothSniper
+    if type(config) ~= "table" then return nil end
+
+    for _, booth in ipairs(booths:GetChildren()) do
+        local pets = booth:FindFirstChild("Pets")
+        local top = pets and pets:FindFirstChild("BoothTop")
+        local scroll = top and top:FindFirstChild("PetScroll")
+        if scroll then
+            for _, listing in ipairs(scroll:GetChildren()) do
+                local buy = listing:FindFirstChild("Buy")
+                local price = ReadCost(buy and buy:FindFirstChild("Cost"))
+                if price then
+                    local itemName = listing:GetAttribute("ItemName")
+                    if type(itemName) ~= "string" then
+                        itemName = listing.Name
+                    end
+
+                    for key, rule in pairs(config) do
+                        if type(key) == "string" and key:match("^Items_%d+$")
+                            and type(rule) == "table"
+                            and type(rule.item) == "string"
+                            and itemName == rule.item
+                            and price < (tonumber(rule.maxprice) or 0) then
+                            return {
+                                Item = listing,
+                                ItemName = itemName,
+                                Price = price,
+                                ListingID = listing.Name,
+                                Booth = booth,
+                                BoothID = booth.Name,
+                            }
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    return nil
 end
 -- [END] BOX 2: TIM ITEM DU DIEU KIEN
 
