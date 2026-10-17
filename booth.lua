@@ -413,21 +413,24 @@ end)
 
 
 -- [START] BOX 2 TEXT DISPLAY
--- Tao cac dong van ban truc tiep trong tab Booth, khong tao Section hay ScreenGui.
+-- Mot label duy nhat hien thi ca 3 gia tri cua Box 2.
 local function Box2_DisplayValue(value)
     if value == nil then return "nil" end
     return tostring(value)
 end
 
-local Box2BoothLabel = BoothTab:CreateLabel({ Text = "boothid: nil", Style = 2 })
-local Box2ItemLabel = BoothTab:CreateLabel({ Text = "itemid: nil", Style = 2 })
-local Box2QuantityLabel = BoothTab:CreateLabel({ Text = "quantity: nil", Style = 2 })
+local Box2StatusLabel = BoothTab:CreateLabel({
+    Text = "boothid: nil | itemid: nil | quantity: nil",
+    Style = 2
+})
 
 task.spawn(function()
     while true do
-        Box2BoothLabel:Set("boothid: " .. Box2_DisplayValue(boothid))
-        Box2ItemLabel:Set("itemid: " .. Box2_DisplayValue(itemid))
-        Box2QuantityLabel:Set("quantity: " .. Box2_DisplayValue(quantity))
+        Box2StatusLabel:Set(
+            "boothid: " .. Box2_DisplayValue(boothid)
+            .. " | itemid: " .. Box2_DisplayValue(itemid)
+            .. " | quantity: " .. Box2_DisplayValue(quantity)
+        )
         task.wait(0.1)
     end
 end)
