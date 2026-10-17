@@ -403,7 +403,6 @@ task.spawn(function()
             else
                 print("[Booth][Box 3][WAITING]", "ownerId=", ownerId, "listingId=", listingId, "quantity=", listingQuantity)
             end
-            end
         end
 
         task.wait(0.5)
