@@ -297,12 +297,30 @@ Box2_FindEligibleItems = function()
         return nil
     end
 
+    local function NormalizeAssetKey(value)
+        if type(value) ~= "string" then return nil end
+        value = value:lower()
+        value = value:gsub("%?.*$", "")
+        value = value:gsub("%.png$", "")
+        value = value:gsub("%.jpe?g$", "")
+        value = value:gsub("%.webp$", "")
+        value = value:gsub("^rbxassetid://", "")
+        value = value:gsub("^https?://www%.roblox%.com/asset/%?id=", "")
+        value = value:gsub("^https?://www%.roblox%.com/library/", "")
+        value = value:gsub("^https?://create%.roblox%.com/store/asset/", "")
+        value = value:gsub("[^%w]", "")
+        return value ~= "" and value or nil
+    end
+
     local function GetPetAssetId(petName)
         local pet = Box2_PetsDirectory[petName]
         if type(pet) ~= "table" or type(pet.thumbnail) ~= "string" then
             return nil
         end
-        return pet.thumbnail:match("%d+")
+        local raw = pet.thumbnail
+        local id = raw:match("[?&]id=(%d+)") or raw:match("/library/(%d+)") or raw:match("/asset/(%d+)") or raw:match("rbxassetid://(%d+)")
+        if id then return id end
+        return raw:match("(%d+)")
     end
 
     local function FindListingForRule(rule)
@@ -322,7 +340,9 @@ Box2_FindEligibleItems = function()
                     local icon = listing:FindFirstChild("Icon", true)
                     local image = icon and icon:IsA("ImageLabel") and icon.Image
 
-                    if type(image) == "string" and image:match("%d+") == targetAssetId then
+                    local imageKey = NormalizeAssetKey(image)
+                    local targetKey = NormalizeAssetKey(targetAssetId)
+                    if imageKey and targetKey and imageKey == targetKey then
                         local buy = listing:FindFirstChild("Buy", true)
                         local price = ReadCost(buy and buy:FindFirstChild("Cost", true))
 
