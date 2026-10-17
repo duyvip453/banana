@@ -377,8 +377,6 @@ end
 
 
 
-Box0_AutoSniperBooth()
-
 
 -- [START] BOX 3: PURCHASE
 -- Box 3 duoc khai bao rieng; Box 0 chi dieu phoi viec goi ham khi toggle ON.
@@ -431,6 +429,7 @@ Box4_ServerHop = function()
 end
 -- [END] BOX 4: SERVER HOP
 
+Box0_AutoSniperBooth()
 
 -- [START] BOX 2 DISPLAY UPDATE
 task.spawn(function()
