@@ -385,12 +385,27 @@ task.spawn(function()
                     ownerId,
                     {
                         [listingId] = listingQuantity
-                    }
-                }
+                    },
+    {
+        Caller = {
+            LineNumber = 527,
+            ScriptClass = "ModuleScript",
+            Variadic = false,
+            Traceback = "ReplicatedStorage.Library.Client.BoothCmds:527 function PromptPurchase2\nReplicatedStorage.Library.Client.BoothCmds:654 function promptOtherPlayerBooth2\nReplicatedStorage.Library.Client.BoothCmds:157",
+            ScriptPath = "ReplicatedStorage.Library.Client.BoothCmds",
+            FunctionName = "PromptPurchase2",
+            Handle = "function: 0x4afa980d0c15edc1",
+            ScriptType = "Instance",
+            ParameterCount = 2,
+            SourceIdentifier = "ReplicatedStorage.Library.Client.BoothCmds"
+        }
+    }
+}
 
-                -- TODO: Dan lenh goi Remote mua listing cua ban vao day.
-                -- Vi du: <RemoteCuaBan>:FireServer(unpack(args))
-                -- Thay dong vi du bang lenh goi Remote chinh xac cua game.
+game:GetService("ReplicatedStorage")
+    :WaitForChild("Network")
+    :WaitForChild("Booths_RequestPurchase")
+    :InvokeServer(unpack(args))
             else
             end
         end
