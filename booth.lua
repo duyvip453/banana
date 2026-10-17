@@ -350,6 +350,52 @@ Box2_FindEligibleItems = function()
 end
 -- [END] BOX 2: TIM ITEM DU DIEU KIEN
 
+
+
+Box0_AutoSniperBooth()
+
+
+-- [START] BOX 3: PURCHASE
+-- Box 3 doc lap: chuan bi args mua moi 0.5 giay khi AutoSearch dang bat.
+task.spawn(function()
+    while true do
+        if Settings.AutoSearch then
+            local ownerId = boothid
+            local listingId = itemid
+            local listingQuantity = quantity
+
+            -- Chi tao args khi Box 2 da tim duoc listing hop le.
+            if ownerId ~= nil
+                and listingId ~= nil
+                and tonumber(listingQuantity) ~= nil then
+
+                local args = {
+                    ownerId,
+                    {
+                        [listingId] = listingQuantity
+                    }
+                }
+
+                -- TODO: Dan lenh goi Remote mua listing cua ban vao day.
+                -- Vi du: <RemoteCuaBan>:FireServer(unpack(args))
+                -- Thay dong vi du bang lenh goi Remote chinh xac cua game.
+            else
+            end
+        end
+
+        task.wait(0.5)
+    end
+end)
+-- [END] BOX 3: PURCHASE
+
+
+-- [START] BOX 4: SERVER HOP
+-- TODO: Chua them chuc nang.
+-- Muc dich: Khu vuc xu ly doi server khi khong con listing
+-- nao dat dieu kien sau mot luot quet thanh cong.
+-- [END] BOX 4: SERVER HOP
+
+
 -- [START] BOX 2 DISPLAY: BANG TRANG THAI DOC LAP
 -- Chi hien thi 3 gia tri do Box 2 cap nhat: boothid, itemid, quantity.
 task.spawn(function()
@@ -425,45 +471,3 @@ task.spawn(function()
 end)
 -- [END] BOX 2 DISPLAY: BANG TRANG THAI DOC LAP
 
-Box0_AutoSniperBooth()
-
-
--- [START] BOX 3: PURCHASE
--- Box 3 doc lap: chuan bi args mua moi 0.5 giay khi AutoSearch dang bat.
-task.spawn(function()
-    while true do
-        if Settings.AutoSearch then
-            local ownerId = boothid
-            local listingId = itemid
-            local listingQuantity = quantity
-
-            -- Chi tao args khi Box 2 da tim duoc listing hop le.
-            if ownerId ~= nil
-                and listingId ~= nil
-                and tonumber(listingQuantity) ~= nil then
-
-                local args = {
-                    ownerId,
-                    {
-                        [listingId] = listingQuantity
-                    }
-                }
-
-                -- TODO: Dan lenh goi Remote mua listing cua ban vao day.
-                -- Vi du: <RemoteCuaBan>:FireServer(unpack(args))
-                -- Thay dong vi du bang lenh goi Remote chinh xac cua game.
-            else
-            end
-        end
-
-        task.wait(0.5)
-    end
-end)
--- [END] BOX 3: PURCHASE
-
-
--- [START] BOX 4: SERVER HOP
--- TODO: Chua them chuc nang.
--- Muc dich: Khu vuc xu ly doi server khi khong con listing
--- nao dat dieu kien sau mot luot quet thanh cong.
--- [END] BOX 4: SERVER HOP
