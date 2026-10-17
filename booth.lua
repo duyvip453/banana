@@ -143,15 +143,20 @@ local function Box0_AutoSniperBooth()
         end)
 
         -- Box 2 doc lap: cap nhat listing moi 0.5 giay.
+        print("[Booth][Box 0] Auto Sniper Booth BAT - khoi dong worker Box 2")
         task.spawn(function()
             while running do
                 if type(Box2_FindEligibleItems) == "function" then
                     local ok, err = pcall(Box2_FindEligibleItems)
                     if not ok then
+                        warn("[Booth][Box 2] Loi khi quet: " .. tostring(err))
                     end
+                else
+                    warn("[Booth][Box 2] Ham Box2_FindEligibleItems chua duoc khoi tao")
                 end
                 task.wait(0.5)
             end
+            print("[Booth][Box 2] Worker da dung")
         end)
 
 
@@ -172,7 +177,13 @@ local function Box0_AutoSniperBooth()
         Name = "Auto Sniper Booth",
         CurrentValue = false,
         Callback = function(value)
-            if value then Start() else StopBox0() end
+            if value then
+                print("[Booth][Box 0] Toggle duoc BAT")
+                Start()
+            else
+                print("[Booth][Box 0] Toggle duoc TAT")
+                StopBox0()
+            end
         end
     })
 end
@@ -214,8 +225,10 @@ local Box2_PetsDirectory
 local Box2_ServerHopRequested = false
 
 Box2_FindEligibleItems = function()
+    print("[Booth][Box 2] Bat dau quet config _G.DyuBoothSniper")
     local config = _G.DyuBoothSniper
     if type(config) ~= "table" then
+        warn("[Booth][Box 2] Khong co config table _G.DyuBoothSniper; kiem tra script config chay truoc Booth")
         boothid, itemid, quantity = nil, nil, nil
         return nil
     end
@@ -226,12 +239,14 @@ Box2_FindEligibleItems = function()
         local directory = library and library:FindFirstChild("Directory")
         local petsModule = directory and directory:FindFirstChild("Pets")
         if not petsModule then
+            warn("[Booth][Box 2] Khong tim thay ReplicatedStorage.Library.Directory.Pets")
             boothid, itemid, quantity = nil, nil, nil
             return nil
         end
 
         local ok, pets = pcall(require, petsModule)
         if not ok or type(pets) ~= "table" then
+            warn("[Booth][Box 2] require Pets that bai: " .. tostring(pets))
             boothid, itemid, quantity = nil, nil, nil
             return nil
         end
@@ -241,6 +256,7 @@ Box2_FindEligibleItems = function()
     local things = workspace:FindFirstChild("__THINGS")
     local booths = things and things:FindFirstChild("Booths")
     if not booths then
+        warn("[Booth][Box 2] Khong tim thay workspace.__THINGS.Booths")
         boothid, itemid, quantity = nil, nil, nil
         return nil
     end
@@ -336,6 +352,11 @@ Box2_FindEligibleItems = function()
             local index = tonumber(key:match("^Items_(%d+)$"))
             if index and index > maxIndex then maxIndex = index end
         end
+    end
+
+    print("[Booth][Box 2] So muc Items_N phat hien: " .. tostring(maxIndex))
+    if maxIndex == 0 then
+        warn("[Booth][Box 2] Config khong co key Items_1, Items_2... hop le")
     end
 
     -- Chi tra ve mot listing. Neu khong tim thay, danh dau item het hang
