@@ -111,7 +111,7 @@ local Box2StatusLabel = Tab1:CreateLabel({
 
 
 -- [START] BOX 0: AUTO SNIPER BOOTH
-local RunBox1, StopBox0, Box2_FindEligibleItems, Box4_ServerHop
+local RunBox1, StopBox0, Box2_FindEligibleItems, Box3_PurchaseCurrentListing, Box4_ServerHop
 local function Box0_AutoSniperBooth()
     local running = false
     local toggle
@@ -382,7 +382,7 @@ Box0_AutoSniperBooth()
 
 -- [START] BOX 3: PURCHASE
 -- Box 3 duoc khai bao rieng; Box 0 chi dieu phoi viec goi ham khi toggle ON.
-local function Box3_PurchaseCurrentListing()
+Box3_PurchaseCurrentListing = function()
     if not Settings.AutoSearch then return end
 
     local ownerId = boothid
@@ -424,9 +424,11 @@ end
 
 
 -- [START] BOX 4: SERVER HOP
--- TODO: Chua them chuc nang.
--- Muc dich: Khu vuc xu ly doi server khi khong con listing
--- nao dat dieu kien sau mot luot quet thanh cong.
+-- Ham rieng cua Box 4. Chua co logic doi server nen hien tai chi kiem tra toggle.
+Box4_ServerHop = function()
+    if not Settings.AutoSearch then return end
+    -- TODO: Them logic doi server tai day.
+end
 -- [END] BOX 4: SERVER HOP
 
 
