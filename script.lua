@@ -68,7 +68,7 @@ Features.BoothSniper = {
         local targets = {}
         if _G.DyuBoothSniper then
             for k, v in pairs(_G.DyuBoothSniper) do
-                if type(k) == "string" and k:lower():find("items_") and type(v) == "table" then
+                if type(k) == "string" and k:lower():find("item") and type(v) == "table" then
                     local name = v.item or v.Item or v.name or v.Name
                     local maxp = tonumber(v.maxprice or v.MaxPrice or v.price or v.Price)
                     if name and maxp then
@@ -144,45 +144,7 @@ Features.BoothSniper = {
     end,
 
     Step4_HopServer = function(self)
-        local req = (syn and syn.request) or (http and http.request) or http_request or request or (fluxus and fluxus.request)
-        if not req then
-            print("BUG_STEP4: No executor request function found")
-            return
-        end
-
-        local url = string.format("https://games.roblox.com/v1/games/%s/servers/Public?sortOrder=Desc&limit=100", tostring(game.PlaceId))
-        local ok, res = pcall(function()
-            return req({ Url = url, Method = "GET" })
-        end)
-
-        if not ok or not res or not res.Body then
-            print("BUG_STEP4: Failed to fetch server list")
-            return
-        end
-
-        local jsonOk, data = pcall(function()
-            return Core.Services.HttpService:JSONDecode(res.Body)
-        end)
-
-        if not jsonOk or not data or not data.data then
-            print("BUG_STEP4: Failed to parse server list JSON")
-            return
-        end
-
-        for _, s in ipairs(data.data) do
-            if s.id ~= game.JobId and s.playing and s.maxPlayers and s.playing <= (s.maxPlayers - 2) then
-                local hopOk, hopErr = pcall(function()
-                    Core.Services.TeleportService:TeleportToPlaceInstance(game.PlaceId, s.id, Core.Player)
-                end)
-                if not hopOk then
-                    print("BUG_STEP4: Teleport error " .. tostring(hopErr))
-                else
-                    task.wait(3)
-                end
-            end
-        end
-
-        print("BUG_STEP4: All candidates tried, looping again")
+        return
     end,
 
     Start = function(self)
@@ -201,7 +163,6 @@ Features.BoothSniper = {
                     self:Step3_BuyItem(targetItem)
                     task.wait(0.05)
                 else
-                    self:Step4_HopServer()
                     task.wait(1)
                 end
             end
