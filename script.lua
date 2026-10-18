@@ -170,14 +170,19 @@ Features.BoothSniper = {
     end,
 
     Stop = function(self)
+        if not self.Enabled or self.IsStopping then return end
+        self.IsStopping = true
         self.Enabled = false
         if self.Thread then
             task.cancel(self.Thread)
             self.Thread = nil
         end
         if self.ToggleRef and type(self.ToggleRef.Set) == "function" then
-            self.ToggleRef:Set(false)
+            pcall(function()
+                self.ToggleRef:Set(false)
+            end)
         end
+        self.IsStopping = false
         print("BUG_CORE: Features.BoothSniper stopped")
     end,
 }
