@@ -98,8 +98,13 @@ local BoothTab = Window:CreateTab({
 
 BoothTab:CreateSection("Tìm đồ trong Plaza")
 
-    toggle = BoothTab:CreateToggle({
-        Name = "Auto Sniper Booth",
-        CurrentValue = false,
-        Callback = function(value)
+ local Controller = loadstring(game:HttpGet("https://raw.githubusercontent.com/duyvip453/banana/refs/heads/main/script.lua"))()
+-- Trong sự kiện Toggle của bạn:
+toggle = BoothTab:CreateToggle({
+    Name = "Auto Sniper Booth",
+    CurrentValue = false,
+    Callback = function(value)
+        Controller:Toggle("BoothSniper", value, toggle)
+    end
+})
             
